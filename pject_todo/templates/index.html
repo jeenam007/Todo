@@ -1,13 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Web Page</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Todo App{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #sidebar {
+      min-width: 220px;
+      max-width: 220px;
+      height: 100vh;
+      position: fixed;
+      top: 56px;
+      left: 0;
+      padding-top: 1rem;
+      background-color: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+    }
+    #content {
+      margin-left: 220px;
+      padding: 2rem;
+      margin-top: 56px;
+      flex-grow: 1;
+    }
+    .nav-link.active {
+      font-weight: 600;
+      color: #0d6efd !important;
+    }
+  </style>
 </head>
 <body>
-    <h1>Todo App</h1>
-    <a href="{% url 'create'%}">Create Todo</a><br><br>
-    <a href="{% url 'list' %}">List All todos</a>
-    <a href="{% url 'gettodolist' %}">List Api todos</a>
-    <a href="{% url 'profit' %}">Calculate Profit/Loss</a>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Todo App</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <nav class="nav flex-column px-3">
+    <a class="nav-link" href="{% url 'createtodo' %}">Create Todo</a>
+    <a class="nav-link" href="{% url 'list' %}">List All Todos</a>
+    <a class="nav-link" href="{% url 'gettodolist' %}">List API Todos</a>
+    <a class="nav-link" href="{% url 'profit' %}">Calculate Profit/Loss</a>
+    <hr>
+    <a class="nav-link" href="{% url 'subtask_create' %}">Create Subtask</a>
+    <a class="nav-link" href="{% url 'subtask_list' %}">Subtask List View</a>
+    <a class="nav-link" href="{% url 'course_create' %}">Create Course</a>
+    <a class="nav-link" href="{% url 'course_list' %}">List Course</a>
+    <a class="nav-link" href="{% url 'createstudent_detail' %}">Add Student Details</a>
+    <a class="nav-link" href="{% url 'student_list' %}">Student List</a>
+    <a class="nav-link" href="{% url 'enrol_students' %}">Enrol Student Data</a>
+     <a class="nav-link" href="{% url 'enrol_list' %}"> Enrolled Data</a>
+    
+   
+
+  </nav>
+</div>
+
+<!-- Main Content -->
+<div id="content">
+  {% block welcome_message %}
+  <h2>Welcome to the Todo App!</h2>
+  <p>Select an option from the sidebar to get started.</p>
+  {% endblock %}
+
+  {% block body_block %}
+  {% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

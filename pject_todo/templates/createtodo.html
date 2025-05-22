@@ -1,17 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create todo</title>
-</head>
-<body>
-    <h1>Create your Todos Here</h1>
-   <form action="" method="POST">
-    {% csrf_token %}
-   
-   {{form.as_p}}
-   <input type="submit">
-   </form>
+{% extends 'index.html' %}
 
-    <!--taskname,user,status-->
-</body>
-</html>
+{% block welcome_message %}
+<!-- You can put a welcome message here or leave empty -->
+{% endblock %}
+
+{% block body_block %}
+    <h1>Create your Todos Here</h1>
+    <form action="" method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <!-- You can add taskname, user, status fields here if needed -->
+{% endblock %}
+
+
+
+
+

@@ -1,0 +1,30 @@
+{% extends 'index.html' %}
+
+{% block body_block %}
+<div class="container mt-5">
+    <h2>Student Enrollments</h2>
+
+    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Enrolled Courses</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if grouped_enrollments %}
+                {% for student_name, course_name in grouped_enrollments.items %}
+                    <tr>
+                        <td>{{ student_name }}</td>
+                        <td>{{ course_name|join:", " }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="2"><em>No enrollments found.</em></td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

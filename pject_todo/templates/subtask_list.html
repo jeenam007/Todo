@@ -1,0 +1,67 @@
+{% extends 'index.html' %}
+
+{% block welcome_message %}
+<!-- You can put a welcome message here or leave empty -->
+{% endblock %}
+
+{% block body_block %}
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .table-container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="table-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>SubTask List</h2>
+            <a href="{% url 'subtask_create' %}" class="btn btn-success">Add SubTask</a>
+        </div>
+
+        {% if subtasks %}
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Subtask Name</th>
+                        <th>Task List</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subtask in subtasks %}
+                        <tr>
+                            <td>{{ subtask.subtask }}</td>
+                            <td>
+                                {% with task_names=subtask.task_name.all %}
+                                    {% if task_names %}
+                                        {{ task_names|join:", " }}
+                                    {% else %}
+                                        <em>No tasks assigned</em>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'subtask_delete' subtask.pk %}" onsubmit="return confirm('Are you sure you want to delete this SubTask?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-info">No subtasks found.</div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

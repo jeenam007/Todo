@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create todo</title>
+</head>
+<body>
+    <h1>Create your Todos Here</h1>
+   <form action="" method="POST">
+    {% csrf_token %}
+   
+   {{form.as_p}}
+   <input type="submit">
+   </form>
+
+    <!--taskname,user,status-->
+</body>
+</html>

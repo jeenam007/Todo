@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Todos(models.Model):
@@ -6,11 +7,62 @@ class Todos(models.Model):
     status = models.CharField(max_length=25, default="Not Completed")
     user = models.CharField(max_length=50)
     date = models.DateField(auto_now=True)
-
-    
-
     def __str__(self):
         return self.task_name
+    
+class SubTask(models.Model):
+        # task_name = models.ForeignKey(Todos, on_delete=models.CASCADE, null=True, blank=True)   
+        task_name = models.ManyToManyField('Todos')
+        subtask = models.CharField(max_length=25)
+        created_date = models.DateTimeField(default=timezone.now)
+
+        def __str__(self):
+            return self.subtask
+      
+
+
+class Course(models.Model):
+     course_name=models.CharField(max_length=100)
+     course_code=models.CharField(max_length=15,unique=True)
+     def __str__(self):
+            return self.course_name
+          
+        #   return f"{self.course_name}-{self.course_code}"
+     
+class Student(models.Model):
+    QUALIFICATION_CHOICES = (
+        ('BTech', 'BTech'),
+        ('BBA', 'BBA'),
+        ('BCA', 'BCA'),
+        ('MBA', 'MBA'),
+        ('MTech', 'MTech'),
+    )
+
+    student_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    qualification = models.CharField(
+        max_length=10,  # Choices are short; 10 is enough
+        choices=QUALIFICATION_CHOICES,
+        blank=True,
+        null=True
+    )
+    mobile_no = models.BigIntegerField(blank=True, null=True)
+    address = models.CharField(max_length=300, blank=True, null=True)
+
+    def __str__(self):
+        return self.student_name
+     
+class StudentCourse(models.Model):
+     student_name=models.ForeignKey(Student, on_delete=models.CASCADE, null=True, blank=True)  
+     course_name=models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
+     enrolled_on=models.DateField(auto_now_add=True)
+
+    # class Meta:
+    #   unique_together=()
+     def __str__(self):
+          return f"{self.student_name}-{self.course_name}"
+        #   return f"{self.student_name}-{self.course_name.course_code}"
+    
 
 
 

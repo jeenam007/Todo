@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+
+{% block welcome_message %}
+<!-- You can put a welcome message here or leave empty -->
+{% endblock %}
+
+{% block body_block %}
+    <h1>Create your Course Here</h1>
+    <form action="" method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    
+{% endblock %}

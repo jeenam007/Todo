@@ -1,0 +1,31 @@
+{% extends 'index.html' %}
+
+{% block welcome_message %}
+<!-- You can put a welcome message here or leave empty -->
+{% endblock %}
+
+{% block body_block %}
+
+    <h1>Course List</h1>
+    <table class="table">
+      <tr>
+          <th>Course Name</th>
+          <th>Course Code</th>
+          <th>Edit</th>
+          <th>Delete</th>
+      </tr>
+      {% for course_obj in courselist %}
+      <tr>
+          <td>{{ course_obj.course_name | upper }}</td>
+          <td>{{ course_obj.course_code }}</td>
+          <td><a href="{% url 'course_edit' course_obj.id %}">Edit</td>
+          <td><a href="{% url 'course_delete' course_obj.id %}">Delete</td> 
+
+          
+              
+      </tr>
+      
+      {% endfor %}
+  </table>
+  
+{% endblock %}
