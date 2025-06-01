@@ -1,0 +1,20 @@
+{% extends 'index.html' %}
+
+{% block welcome_message %}
+<!-- You can put a welcome message here or leave empty -->
+{% endblock %}
+
+{% block body_block %}
+<h2>Upload TODOs from Excel</h2>
+<form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 10px; max-width: 300px;">
+    {% csrf_token %}
+
+    <label>
+        Upload Excel File:
+        {{ form.file }}
+    </label>
+
+    <button type="submit" class="btn btn-primary">Upload</button>
+
+</form>
+{% endblock %}

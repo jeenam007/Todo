@@ -7,6 +7,9 @@
 {% block body_block %}
 
     <h1>Todos List</h1>
+     <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+        <a href="{% url 'upload_todo' %}" class="btn btn-primary">Upload Excel</a>
+    </div>
     <table class="table">
       <tr>
           <th>Task</th>

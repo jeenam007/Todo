@@ -3,6 +3,7 @@ from django.forms import ModelForm
 from .models import Todos,SubTask,Course,Student,StudentCourse
 from django_select2.forms import ModelSelect2MultipleWidget
 
+
 class TodoCreateForm(ModelForm):
     class Meta:
         model=Todos
@@ -17,6 +18,9 @@ class TodoCreateForm(ModelForm):
     status=forms.ChoiceField(choices=options,label="Status*")
     def clean(self):
         print("inside clean")
+
+class ExcelUploadForm(forms.Form):
+    file = forms.FileField(label="Upload Excel File")
 
 class SubTaskForm(forms.ModelForm):
     class Meta:

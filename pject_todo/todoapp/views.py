@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from django.http import HttpResponse
-from todoapp.forms import TodoCreateForm
+from todoapp.forms import TodoCreateForm,ExcelUploadForm
 from .models import Todos,SubTask,Course,Student,StudentCourse
 from .forms import Todos,SubTaskForm,CourseForm,StudentForm,StudentCourseMultiForm
 from collections import defaultdict
 from django.db import connection
 from django.contrib import messages
-
+import openpyxl
 
 # Create your views here.\
 
@@ -17,8 +17,31 @@ def create_todo(request):
         form = TodoCreateForm(request.POST or None)
         if form.is_valid():
             form.save()
+            messages.success(request,"Todo created successfully.")
             return redirect('list')
         return render(request, 'createtodo.html', {'form': form})
+
+def upload_excel(request):
+    form=ExcelUploadForm(request.POST or None,request.FILES or None)
+
+    if request.method=='POST' and form.is_valid():
+        excel_file=request.FILES['file']
+        wb=openpyxl.load_workbook(excel_file)
+        sheet=wb.active
+
+        created=0
+        for row in sheet.iter_rows(min_row=2,values_only=True):
+            task_name=row[0]
+            user=row[1]
+            status=row[2]
+
+            if task_name and user and status:
+                Todos.objects.create(task_name=task_name,user=user,status=status)
+                created+=1
+
+        messages.success(request,f'{created} todos uploaded successfully from excel.')
+        return redirect('list')
+    return render(request,'upload_excel.html',{'form':form})
 
 def list_all_todos(request):   
     with connection.cursor() as cursor:
@@ -50,6 +73,7 @@ def edit_todo(request,pk):
 
          if frm.is_valid():
           instance_edit.save()
+          messages.success(request,"Todo updated successfully.")
          return redirect("list")
      
      else:  
@@ -144,6 +168,7 @@ def student_edit(request,pk):
     form=StudentForm(request.POST or None,instance=student)
     if form.is_valid():
         form.save()
+        messages.success(request,"Student details updated successfully.")
         return redirect('student_list')
     return render(request,'createstudent_det.html',{'form':form})
 
@@ -162,6 +187,7 @@ def create_studentdet(request):
     form=StudentForm(request.POST or None)
     if form.is_valid():
         form.save()
+        messages.success(request,"Student details created successfully.")
         return redirect('student_list')
     return render(request,'createstudent_det.html',{'form':form})
 
@@ -175,14 +201,20 @@ def enroll_student(request):
         student=form.cleaned_data['student_name']
         courses=form.cleaned_data['course_name']
 
+        enrolled_courses = []
         for course in courses:
             # Check for duplicate enrollment
             already_enrolled = StudentCourse.objects.filter(student_name=student, course_name=course).exists()
             if not already_enrolled:
                 StudentCourse.objects.create(student_name=student,course_name=course)
-                messages.success(request, f"{student} successfully enrolled in {course}.")
+                enrolled_courses.append(str(course))
+                
             else:
                  messages.warning(request, f"{student} is already enrolled in {course}.")
+        
+        if enrolled_courses:
+            course_list = ", ".join(enrolled_courses)
+            messages.success(request, f"{student} successfully enrolled in {course_list}.")
         return redirect('enrol_list')
     else:
         form=StudentCourseMultiForm()

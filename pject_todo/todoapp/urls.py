@@ -21,7 +21,8 @@ urlpatterns = [
     path('editstudent/<int:pk>/',views.student_edit,name='edit_student'),
     path('enrolstudents/',views.enroll_student,name='enrol_students'),
     path('enrol_list/',views.student_enrol_list,name='enrol_list'),
-    path('deletestudent/<int:pk>/',views.delete_student,name='delete_student')
+    path('deletestudent/<int:pk>/',views.delete_student,name='delete_student'),
+    path('uploadtodo/',views.upload_excel,name='upload_todo')
     
    
 ]

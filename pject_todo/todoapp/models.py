@@ -31,7 +31,7 @@ class Course(models.Model):
      
 class Student(models.Model):
     QUALIFICATION_CHOICES = (
-         
+        ("", "Select"),
         ('BTech', 'BTech'),
         ('BBA', 'BBA'),
         ('BCA', 'BCA'),
