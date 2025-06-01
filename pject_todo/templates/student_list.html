@@ -24,8 +24,8 @@
           <td>{{ todo_obj.qualification | default:"No data" }}</td>
           <td>{{ todo_obj.mobile_no | default:"No data" }}</td>
           <td>{{ todo_obj.address | default:"No data" }}</td>
-          <td><a href="{% url 'edit' todo_obj.id  %}">Edit</td>
-            <td><a href="{% url 'delete' todo_obj.id %}">Delete</td>   
+          <td><a href="{% url 'edit_student' todo_obj.id  %}">Edit</td>
+            <td><a href="{% url 'delete_student' todo_obj.id %}">Delete</td>   
       </tr>
       {% endfor %}
   </table>

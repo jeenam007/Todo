@@ -19,10 +19,7 @@
           <td>{{ course_obj.course_name | upper }}</td>
           <td>{{ course_obj.course_code }}</td>
           <td><a href="{% url 'course_edit' course_obj.id %}">Edit</td>
-          <td><a href="{% url 'course_delete' course_obj.id %}">Delete</td> 
-
-          
-              
+          <td><a href="{% url 'course_delete' course_obj.id %}">Delete</td>               
       </tr>
       
       {% endfor %}

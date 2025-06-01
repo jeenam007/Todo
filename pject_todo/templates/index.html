@@ -78,9 +78,25 @@
 
 <!-- Main Content -->
 <div id="content">
+  {% if messages %}
+  <div>
+    {% for message in messages %}
+      <div class="alert alert-dismissible fade show 
+        {% if message.tags == 'success' %}alert-success
+        {% elif message.tags == 'warning' %}alert-warning
+        {% elif message.tags == 'error' %}alert-danger
+        {% else %}alert-info{% endif %}"role="alert">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
   {% block welcome_message %}
   <h2>Welcome to the Todo App!</h2>
   <p>Select an option from the sidebar to get started.</p>
+  
   {% endblock %}
 
   {% block body_block %}

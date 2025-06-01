@@ -18,9 +18,11 @@ urlpatterns = [
     path('course_delete/<int:pk>/',views.course_delete,name='course_delete'),
     path('createstudent_det',views.create_studentdet,name='createstudent_detail'),
     path('studentslist/',views.studentlist,name='student_list'),
+    path('editstudent/<int:pk>/',views.student_edit,name='edit_student'),
     path('enrolstudents/',views.enroll_student,name='enrol_students'),
-    path('enrol_list/',views.student_enrol_list,name='enrol_list')
-   
+    path('enrol_list/',views.student_enrol_list,name='enrol_list'),
+    path('deletestudent/<int:pk>/',views.delete_student,name='delete_student')
+    
    
 ]
 # path('list/<int:pk>/', views.list_all_todos, name='list'),

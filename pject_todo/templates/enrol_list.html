@@ -1,30 +1,34 @@
 {% extends 'index.html' %}
 
-{% block body_block %}
-<div class="container mt-5">
-    <h2>Student Enrollments</h2>
+{% block welcome_message %}
+<h2>Enrolled List</h2>
+<!-- You can put a welcome message here or leave empty -->
+{% endblock %}
 
-    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th>Student Name</th>
-                <th>Enrolled Courses</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if grouped_enrollments %}
-                {% for student_name, course_name in grouped_enrollments.items %}
-                    <tr>
-                        <td>{{ student_name }}</td>
-                        <td>{{ course_name|join:", " }}</td>
-                    </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="2"><em>No enrollments found.</em></td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
-</div>
+{% block body_block %}
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>Qualification</th>
+            <th>Courses</th>
+            <th>First Enrolled On</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in grouped_enrollments %}
+        <tr>
+            <td>{{ student.student_name }}</td>
+            <td>{{ student.qualification }}</td>
+            <td>{{ student.course_names }}</td>
+            <td>{{ student.first_enrolled_on }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 {% endblock %}

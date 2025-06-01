@@ -4,12 +4,14 @@ from todoapp.forms import TodoCreateForm
 from .models import Todos,SubTask,Course,Student,StudentCourse
 from .forms import Todos,SubTaskForm,CourseForm,StudentForm,StudentCourseMultiForm
 from collections import defaultdict
+from django.db import connection
+from django.contrib import messages
 
 
 # Create your views here.\
 
 def index(request):
-    return render(request,'index.html')
+    return render(request,'index.html')         
     
 def create_todo(request):
         form = TodoCreateForm(request.POST or None)
@@ -17,12 +19,27 @@ def create_todo(request):
             form.save()
             return redirect('list')
         return render(request, 'createtodo.html', {'form': form})
-    
 
-def list_all_todos(request):
-    todos = Todos.objects.all()  
-    context = {"todos": todos}
-    return render(request, 'listalltodos.html', context)
+def list_all_todos(request):   
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id,task_name,status,user FROM todoapp_todos")
+        rows=cursor.fetchall()
+
+    todos=[]
+    for row in rows:
+        todos.append({
+            'id':row[0],
+            'task_name':row[1],
+            'status':row[2],
+            'user':row[3],
+
+        })
+    return render(request, 'listalltodos.html', {'todos':todos})
+
+# def list_all_todos(request):
+#     todos = Todos.objects.all()  
+#     context = {"todos": todos}
+#     return render(request, 'listalltodos.html', context)
      
 
 def edit_todo(request,pk):
@@ -41,9 +58,18 @@ def edit_todo(request,pk):
 
 
 
+# def delete_todo(request,pk):
+#    instance = Todos.objects.get(pk=pk)
+#    instance.delete()
+#    return redirect("list")
+
 def delete_todo(request,pk):
    instance = Todos.objects.get(pk=pk)
+   if SubTask.objects.filter(task_name=instance).exists():
+       messages.warning(request,f'Cannot delete"{instance.task_name}"-It is already in use.')
+       return redirect('list')
    instance.delete()
+   messages.success(request,f'Todo "{instance.task_name}" was deleted successfully.')
    return redirect("list")
 
 
@@ -91,6 +117,16 @@ def course_create(request):
         return redirect('course_list')
     return render(request,'course_create.html',{'form':form})
 
+def delete_student(request,pk):
+   instance = Student.objects.get(pk=pk)
+   if StudentCourse.objects.filter(student_name=instance).exists():
+       messages.warning(request,f'Cannot delete"{instance.student_name}"-It is already in use.')
+       return redirect('student_list')
+   instance.delete()
+   messages.success(request,f'Student "{instance.student_name}" was deleted successfully.')
+   return redirect("student_list")
+
+
 def course_list(request):
     courselist = Course.objects.all()
     return render(request,'course_list.html',{'courselist':courselist})
@@ -103,9 +139,24 @@ def course_edit(request,pk):
         return redirect('course_list')
     return render(request,'course_create.html',{'form':form})
 
+def student_edit(request,pk):
+    student=get_object_or_404(Student,pk=pk)
+    form=StudentForm(request.POST or None,instance=student)
+    if form.is_valid():
+        form.save()
+        return redirect('student_list')
+    return render(request,'createstudent_det.html',{'form':form})
+
 def course_delete(request,pk):
     course=get_object_or_404(Course,pk=pk)
+
+     # Check if this course is used in StudentCourse
+    if StudentCourse.objects.filter(course_name=course).exists():
+        messages.warning(request, f'Cannot delete "{course.course_name}" -it is already in use.')
+        return redirect('course_list')
     course.delete()
+    messages.success(request, f'Course "{course.course_name}" was deleted successfully.')
+    return redirect('course_list')
 
 def create_studentdet(request):
     form=StudentForm(request.POST or None)
@@ -123,46 +174,63 @@ def enroll_student(request):
     if form.is_valid():
         student=form.cleaned_data['student_name']
         courses=form.cleaned_data['course_name']
+
         for course in courses:
-            StudentCourse.objects.create(student_name=student,course_name=course)
+            # Check for duplicate enrollment
+            already_enrolled = StudentCourse.objects.filter(student_name=student, course_name=course).exists()
+            if not already_enrolled:
+                StudentCourse.objects.create(student_name=student,course_name=course)
+                messages.success(request, f"{student} successfully enrolled in {course}.")
+            else:
+                 messages.warning(request, f"{student} is already enrolled in {course}.")
         return redirect('enrol_list')
     else:
         form=StudentCourseMultiForm()
     return render(request,'enrol.html',{'form':form})
 
-# def student_enrol_list(request):
-#     enrollments = StudentCourse.objects.select_related('student_name', 'course_name')
-#     return render(request, 'enrol_list.html', {'enrollments': enrollments})
 
-# def student_enrol_list(request):
-#     enrollments = StudentCourse.objects.select_related('student_name', 'course_name')
-
-#     grouped_enrollments = defaultdict(list)
-#     for enrollment in enrollments:
-#         grouped_enrollments[enrollment.student_name].append(enrollment.course_name.course_name)
-
-#     return render(request, 'enrol_list.html', {'grouped_enrollments': grouped_enrollments})
 
 def student_enrol_list(request):
-    grouped_enrollments = {}
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT
+                s.id AS student_id,
+                s.student_name,
+                s.qualification,
+                GROUP_CONCAT(c.course_name ORDER BY c.course_name SEPARATOR ', ') AS course_names,
+                MIN(sc.enrolled_on) AS first_enrolled_on
+            FROM
+                todoapp_studentcourse AS sc
+            LEFT JOIN
+                todoapp_student AS s ON sc.student_name_id = s.id
+            LEFT JOIN
+                todoapp_course AS c ON sc.course_name_id = c.id
+            GROUP BY
+                s.id, s.student_name, s.qualification
+        """)
+        rows = cursor.fetchall()
+        grouped_enrollments = []
+    for row in rows:
+        enrollment = {
+            'student_id': row[0],
+            'student_name': row[1],
+            'qualification': row[2],
+            'course_names': row[3],
+            'first_enrolled_on': row[4]
+        }
+        grouped_enrollments.append(enrollment)
 
-    for student in Student.objects.all():
-        # Filter courses via StudentCourse
-        courses = Course.objects.filter(studentcourse__student_name=student)
-        grouped_enrollments[student.student_name] = [course.course_name for course in courses]
+        
+        # columns = [col[0] for col in cursor.description]
+        # grouped_enrollments = [
+        #     dict(zip(columns, row))
+        #     for row in cursor.fetchall()
+        # ]
 
     return render(request, 'enrol_list.html', {
         'grouped_enrollments': grouped_enrollments
     })
-# def student_enrol_list(request):
-#     # Get only actual enrollments (rows in StudentCourse)
-#     enrollments = StudentCourse.objects.select_related('student_name', 'course_name')
 
-#     grouped_enrollments = defaultdict(list)
-#     for enrollment in enrollments:
-#         grouped_enrollments[enrollment.student_name].append(enrollment.course_name.course_name)
-
-#     return render(request, 'enrol_list.html', {'grouped_enrollments': grouped_enrollments})
 
 def maxProfit(prices):
     min_price=float('inf')
