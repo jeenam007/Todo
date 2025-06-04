@@ -22,6 +22,9 @@ class TodoCreateForm(ModelForm):
 class ExcelUploadForm(forms.Form):
     file = forms.FileField(label="Upload Excel File")
 
+class CourseExcelUploadForm(forms.Form):
+    file1 = forms.FileField(label="Upload Excel File")
+
 class SubTaskForm(forms.ModelForm):
     class Meta:
         model=SubTask

@@ -6,7 +6,12 @@
 
 {% block body_block %}
     <h1>Create your Course Here</h1>
+
     <form action="" method="POST">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+        <a href="{% url 'courseupload_excel' %}" class="btn btn-primary">Upload Excel</a>
+    </div>
+    
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary">Submit</button>

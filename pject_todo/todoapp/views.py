@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.http import HttpResponse
 from todoapp.forms import TodoCreateForm,ExcelUploadForm
 from .models import Todos,SubTask,Course,Student,StudentCourse
-from .forms import Todos,SubTaskForm,CourseForm,StudentForm,StudentCourseMultiForm
+from .forms import Todos,SubTaskForm,CourseForm,StudentForm,StudentCourseMultiForm,CourseExcelUploadForm
 from collections import defaultdict
 from django.db import connection
 from django.contrib import messages
 import openpyxl
+from django.db import IntegrityError
+from io import BytesIO
+from openpyxl import Workbook
 
 # Create your views here.\
 
@@ -22,26 +25,97 @@ def create_todo(request):
         return render(request, 'createtodo.html', {'form': form})
 
 def upload_excel(request):
-    form=ExcelUploadForm(request.POST or None,request.FILES or None)
+    form = ExcelUploadForm(request.POST or None, request.FILES or None)
 
-    if request.method=='POST' and form.is_valid():
-        excel_file=request.FILES['file']
-        wb=openpyxl.load_workbook(excel_file)
-        sheet=wb.active
+    if request.method == 'POST' and form.is_valid():
+        excel_file = request.FILES['file']
+        wb = openpyxl.load_workbook(excel_file)
+        sheet = wb.active
 
-        created=0
-        for row in sheet.iter_rows(min_row=2,values_only=True):
-            task_name=row[0]
-            user=row[1]
-            status=row[2]
+        created = 0
+        valid_statuses = ['Completed', 'Not completed']
+        error_rows = []
 
-            if task_name and user and status:
-                Todos.objects.create(task_name=task_name,user=user,status=status)
-                created+=1
+        for idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            task_name, user, status = row[0], row[1], row[2]
+            error_message = ""
 
-        messages.success(request,f'{created} todos uploaded successfully from excel.')
+            if not all([task_name, user, status]):
+                error_message = "Missing required fields."
+            elif status not in valid_statuses:
+                error_message = f"Invalid status: '{status}'. Must be one of {valid_statuses}."
+
+            if error_message:
+                error_rows.append((idx, task_name, user, status, error_message))
+                continue  # Skip saving this row
+
+            try:
+                Todos.objects.create(task_name=task_name, user=user, status=status)
+                created += 1
+            except IntegrityError as e:
+                error_rows.append((idx, task_name, user, status, f"Database error: {str(e)}"))
+
+        if error_rows:
+            # Create a workbook to export errors
+            error_wb = Workbook()
+            error_ws = error_wb.active
+            error_ws.title = "Errors"
+            error_ws.append(['Row Number', 'Task Name', 'User', 'Status', 'Error Message'])
+
+            for row in error_rows:
+                error_ws.append(row)
+
+            # Save workbook to a BytesIO buffer
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=todo_upload_errors.xlsx'
+            output = BytesIO()
+            error_wb.save(output)
+            output.seek(0)
+            response.write(output.getvalue())
+            return response
+
+        # No errors — show success
+        messages.success(request, f'{created} todos uploaded successfully from Excel.')
         return redirect('list')
-    return render(request,'upload_excel.html',{'form':form})
+
+    return render(request, 'upload_excel.html', {'form': form})
+
+
+# def upload_excel(request):
+#     form=ExcelUploadForm(request.POST or None,request.FILES or None)
+
+#     if request.method=='POST' and form.is_valid():
+#         excel_file=request.FILES['file']
+#         wb=openpyxl.load_workbook(excel_file)
+#         sheet=wb.active
+
+#         created=0
+#         valid_statuses = ['Completed', 'Not completed']
+
+#         for idx,row in enumerate(sheet.iter_rows(min_row=2,values_only=True),start=2):
+#             task_name=row[0]
+#             user=row[1]
+#             status=row[2]
+
+#             if not all([task_name,user,status]):
+#                 messages.error(request,f"Row{idx} is missing required fields in row{row}. Pls fill all the required fields.")
+#                 return redirect('upload_todo')
+            
+#             # Validate status
+#             if status not in valid_statuses:
+#                 messages.error(request,f"Invalid status in row{idx}:'{status}'.Allowed values are:{valid_statuses}.")
+            
+#             try:
+#             # if task_name and user and status:
+#                 Todos.objects.create(task_name=task_name,user=user,status=status)
+#                 created+=1
+#             except IntegrityError as e:
+#                 messages.error(request,f"database error on row{idx}:{str(e)}")
+#                 return redirect('list')
+
+#         messages.success(request,f'{created} todos uploaded successfully from excel.')
+#         return redirect('list')
+#     return render(request,'upload_excel.html',{'form':form})
 
 def list_all_todos(request):   
     with connection.cursor() as cursor:
@@ -140,6 +214,52 @@ def course_create(request):
         form.save()
         return redirect('course_list')
     return render(request,'course_create.html',{'form':form})
+
+
+def courseupload_excel(request):
+    form = CourseExcelUploadForm(request.POST or None, request.FILES or None)
+
+    if request.method == 'POST' and form.is_valid():
+        excel_file = request.FILES['file1']
+        wb = openpyxl.load_workbook(excel_file)
+        sheet = wb.active
+
+        created = 0
+        failed_rows = []
+
+        for idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            course_name = row[0]
+            course_code = row[1]
+
+            if not all([course_name, course_code]):
+                failed_rows.append(idx)
+                continue
+
+            try:
+                Course.objects.create(course_name=course_name, course_code=course_code)
+                created += 1
+            except IntegrityError:
+                failed_rows.append(idx)
+
+        # Compose final message
+        if created and failed_rows:
+            messages.warning(
+                request,
+                f"{created} courses uploaded successfully. "
+                f"Skipped rows: {', '.join(map(str, failed_rows))} due to missing/invalid data."
+            )
+        elif created:
+            messages.success(request, f"{created} courses uploaded successfully from Excel.")
+        elif failed_rows:
+            messages.error(
+                request,
+                f"Upload failed. All rows skipped due to errors in rows: {', '.join(map(str, failed_rows))}."
+            )
+
+        return redirect('course_list')  # or 'list' if you want to redirect to list always
+
+    return render(request, 'courseupload_excel.html', {'form': form})
+
 
 def delete_student(request,pk):
    instance = Student.objects.get(pk=pk)

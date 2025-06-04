@@ -22,7 +22,8 @@ urlpatterns = [
     path('enrolstudents/',views.enroll_student,name='enrol_students'),
     path('enrol_list/',views.student_enrol_list,name='enrol_list'),
     path('deletestudent/<int:pk>/',views.delete_student,name='delete_student'),
-    path('uploadtodo/',views.upload_excel,name='upload_todo')
+    path('uploadtodo/',views.upload_excel,name='upload_todo'),
+    path('courseupload/',views.courseupload_excel,name='courseupload_excel')
     
    
 ]
